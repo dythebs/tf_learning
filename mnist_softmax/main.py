@@ -12,14 +12,14 @@ cross_entropy = -tf.reduce_sum(y_*tf.log(y))
 train_step = tf.train.GradientDescentOptimizer(0.01).minimize(cross_entropy)
 #评估模型
 correct_prediction = tf.equal(tf.argmax(y,1),tf.argmax(y_,1))
-accuary = tf.reduce_mean(tf.cast(correct_prediction,tf.float32))
+accuracy = tf.reduce_mean(tf.cast(correct_prediction,tf.float32))
 #初始化
 init = tf.initialize_all_variables()
 sess = tf.Session()
-#训练模型
 sess.run(init)
+#训练模型
 for i in range(2000) :
 	batch_xs,batch_ys = mnist.train.next_batch(100)
 	sess.run(train_step,feed_dict={x:batch_xs,y_:batch_ys})
 #计算精度
-print(sess.run(accuary,feed_dict={x:mnist.test.images,y_:mnist.test.labels}))
+print(sess.run(accuracy,feed_dict={x:mnist.test.images,y_:mnist.test.labels}))
