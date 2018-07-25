@@ -54,7 +54,7 @@ sess = tf.Session()
 sess.run(init)
 #训练模型
 for i in range(20000) :
-	batch_xs,batch_ys = mnist.train.next_batch(100)
+	batch_xs,batch_ys = mnist.train.next_batch(200)
 	if i % 100 == 0 :
 		train_accuracy = sess.run(accuracy,feed_dict={x:batch_xs,y_:batch_ys,keep_prob:1.0})
 		print("step %d, training accuracy %g" % (i,train_accuracy))
