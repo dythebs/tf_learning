@@ -1,7 +1,9 @@
 import os
 import numpy
 import pandas as pd
+from six.moves import urllib
 from sklearn.preprocessing import OneHotEncoder
+
 SOURCE_URL = 'http://download.tensorflow.org/data/'
 def maybe_download(filename, work_directory):
   if not os.path.exists(work_directory):
