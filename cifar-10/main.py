@@ -1,3 +1,50 @@
+import input_data
+import numpy as np
+import tensorflow as tf 
+np.set_printoptions(threshold=np.inf)
+
+def convert_to_one_hot(array, C):
+    return np.eye(C)[array.reshape(-1)]
+
+def uniformization(array):
+	return array / 255.
+
+scope = 0
+
+def weight_varialbe(shape):
+	global scope
+	scope += 1
+	return tf.get_variable(str(scope),shape=shape,dtype=tf.float32,initializer=tf.contrib.layers.xavier_initializer_conv2d()) 
+
+def bias_variable(shape):
+	initial = tf.constant(shape=shape,value=0.0)
+	return tf.Variable(initial)
+
+def conv2d(x,W):
+	return tf.nn.conv2d(x,W,strides=[1,1,1,1],padding='SAME')
+
+def conv_layer_3x3(x,input,output):
+	W_conv = weight_varialbe([3,3,input,output])
+	b_conv = bias_variable([output])
+	return tf.nn.relu(conv2d(x,W_conv) + b_conv)
+
+def fc_layer(x,input,output):
+	W_fc = weight_varialbe([input,output])
+	b_fc = bias_variable([output])
+	return tf.nn.relu(tf.matmul(x,W_fc) + b_fc)
+
+def max_pool_2x2(x):
+	return tf.nn.max_pool(x,ksize=[1,2,2,1],strides=[1,2,2,1],padding='SAME')
+
+
+
+cifar10 = input_data.read_data_sets('CIFAR-10_data/')
+
+cifar10.train.images, cifar10.test.images = uniformization(cifar10.train.images), uniformization(cifar10.test.images)
+
+cifar10.train.labels, cifar10.test.labels = convert_to_one_hot(cifar10.train.labels,10), convert_to_one_hot(cifar10.test.labels,10)
+
+
 x = tf.placeholder(dtype=tf.float32,shape=[None,3072])
 x_image = tf.reshape(x,[-1,32,32,3])
 h_conv1 = conv_layer_3x3(x_image,3,64)
