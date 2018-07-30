@@ -16,8 +16,8 @@ def weight_varialbe(shape):
 	scope += 1
 	return tf.get_variable(str(scope),shape=shape,dtype=tf.float32,initializer=tf.contrib.layers.xavier_initializer_conv2d()) 
 
-def bias_variable(shape):
-	initial = tf.constant(shape=shape,value=0.0)
+def bias_variable(shape,value):
+	initial = tf.constant(shape=shape,value=value)
 	return tf.Variable(initial)
 
 def conv2d(x,W):
@@ -25,12 +25,12 @@ def conv2d(x,W):
 
 def conv_layer_3x3(x,input,output):
 	W_conv = weight_varialbe([3,3,input,output])
-	b_conv = bias_variable([output])
+	b_conv = bias_variable([output],0.0)
 	return tf.nn.relu(conv2d(x,W_conv) + b_conv)
 
 def fc_layer(x,input,output):
 	W_fc = weight_varialbe([input,output])
-	b_fc = bias_variable([output])
+	b_fc = bias_variable([output],0.1)
 	return tf.nn.relu(tf.matmul(x,W_fc) + b_fc)
 
 def max_pool_2x2(x):
@@ -67,12 +67,13 @@ h_conv13 = conv_layer_3x3(h_conv12,512,512)
 h_pool5 = max_pool_2x2(h_conv13)
 h_pool5_flat = tf.reshape(h_pool5,[-1,512])
 h_fc1 = fc_layer(h_pool5_flat,512,4096)
-h_fc2 = fc_layer(h_fc1,4096,4096)
-h_fc3 = fc_layer(h_fc2,4096,1000)
 keep_prob = tf.placeholder(tf.float32)
-h_fc3_drop = tf.nn.dropout(h_fc3,keep_prob)
+h_fc1_drop = tf.nn.dropout(h_fc1,keep_prob)
+h_fc2 = fc_layer(h_fc1_drop,4096,4096)
+h_fc2_drop = tf.nn.dropout(h_fc2,keep_prob)
+h_fc3 = fc_layer(h_fc2_drop,4096,1000)
 W_fc4 = weight_varialbe([1000,10])
-b_fc4 = bias_variable([10])
+b_fc4 = bias_variable([10],0.1)
 y = tf.nn.softmax(tf.matmul(h_fc3_drop,W_fc4) + b_fc4,name='predictions')
 y_ = tf.placeholder(dtype=tf.float32,shape=[None,10],name='labels')
 
