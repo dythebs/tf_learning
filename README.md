@@ -2,7 +2,7 @@
 take notes while learning tensorflow
 
 # Structure of the repository
-* `./cifar-10`
+* `./cifar-10_vgg16`
 * `./fashion-mnist_cnn`
 * `./iris_softmax_regression`
 * `./mnist_cnn` [handwriting recognition by cnn](http://www.tensorfly.cn/tfdoc/tutorials/mnist_pros.html)
