@@ -1,16 +1,17 @@
 import input_data
 import numpy as np
 import tensorflow as tf 
-np.set_printoptions(threshold=np.inf)
 
 def convert_to_one_hot(array, C):
-    return np.eye(C)[array.reshape(-1)]
+	return np.eye(C)[array.reshape(-1)]
 
 def uniformization(array):
 	return array / 255.
 
 def weight_varialbe(shape,name):
-	return tf.get_variable(name,shape=shape,dtype=tf.float32,initializer=tf.contrib.keras.initializers.he_normal())
+	var = tf.get_variable(name,shape=shape,dtype=tf.float32,initializer=tf.contrib.keras.initializers.he_normal())
+	tf.add_to_collection('losses',tf.contrib.layers.l2_regularizer(0.001)(var))
+	return var
 
 def bias_variable(shape,value):
 	initial = tf.constant(shape=shape,value=value)
@@ -43,7 +44,7 @@ cifar10.train.images, cifar10.test.images = uniformization(cifar10.train.images)
 cifar10.train.labels, cifar10.test.labels = convert_to_one_hot(cifar10.train.labels,10), convert_to_one_hot(cifar10.test.labels,10)
 #实现模型
 x = tf.placeholder(dtype=tf.float32,shape=[None,3072])
-x_image = tf.reshape(x,[-1,32,32,3])
+x_image = tf.transpose(tf.reshape(x,[-1,3,32,32]),[0,3,2,1])
 keep_prob = tf.placeholder(tf.float32)
 h_conv1 = conv_layer_3x3(x_image,3,64,'conv_1')
 h_conv2 = conv_layer_3x3(h_conv1,64,64,'conv2')
@@ -77,7 +78,10 @@ y_ = tf.placeholder(dtype=tf.float32,shape=[None,10],name='labels')
 global_step = tf.Variable(0,trainable=False)
 learning_rate = tf.train.exponential_decay(1e-3,global_step,decay_steps=4000,decay_rate=0.1,staircase=True) 
 cross_entropy = -tf.reduce_mean(y_*tf.log(tf.clip_by_value(y,1e-9,1)))
-train_step = tf.train.AdamOptimizer(learning_rate).minimize(cross_entropy,global_step=global_step)
+#L2正则化
+tf.add_to_collection('losses',cross_entropy)
+loss = tf.add_n(tf.get_collection('losses'))
+train_step = tf.train.AdamOptimizer(learning_rate).minimize(loss,global_step=global_step)
 
 correct_prediction = tf.equal(tf.argmax(y,1),tf.argmax(y_,1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction,tf.float32))
@@ -86,7 +90,7 @@ init = tf.global_variables_initializer()
 sess = tf.Session()
 sess.run(init)
 #训练模型
-for i in range(10000):
+for i in range(20000):
 	batch_xs, batch_ys = cifar10.train.next_batch(256)
 	sess.run(train_step, feed_dict={x:batch_xs,y_:batch_ys,keep_prob:0.5})
 	if i % 100 == 0:
