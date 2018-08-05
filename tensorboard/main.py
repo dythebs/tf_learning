@@ -5,11 +5,13 @@ import numpy as np
 
 def weight_variable(shape):
 	W = tf.get_variable(shape=shape, initializer=tf.truncated_normal_initializer(stddev=0.1), name='weight')
+	tf.summary.histogram('summary_weight', W)
 	return W
 
 
 def bais_variable(shape):
 	b = tf.get_variable(shape=shape, initializer=tf.constant_initializer(value=0.1), name='bias')
+	tf.summary.histogram('summary_bias', b)
 	return b
 
 
@@ -26,7 +28,9 @@ def conv_layer(x, kernel_shape, name):
 	with tf.variable_scope(name):
 		W = weight_variable(kernel_shape)
 		b = bais_variable(kernel_shape[3])
-		return tf.nn.relu(conv2d(x, W, name) + b, name='relu')
+		ac = tf.nn.relu(conv2d(x, W, name) + b, name='relu')
+		tf.summary.histogram('summary_ac', ac)
+		return ac
 
 
 def fc_layer(x, shape, name, softmax=False):
@@ -34,9 +38,11 @@ def fc_layer(x, shape, name, softmax=False):
 		W = weight_variable(shape)
 		b = bais_variable(shape[1])
 		if not softmax:
-			return tf.nn.relu(tf.matmul(x, W) + b, name='relu')
+			ac = tf.nn.relu(tf.matmul(x, W) + b, name='relu')
 		else:
-			return tf.nn.softmax(tf.matmul(x, W) + b, name='softmax')
+			ac = tf.nn.softmax(tf.matmul(x, W) + b, name='softmax')
+		tf.summary.histogram('summary_ac', ac)
+		return ac
 
 
 INPUT_SIZE = 784
@@ -47,11 +53,13 @@ CLASS_NUM = 10
 LEARNING_RATE = 1e-3
 BATCH_SIZE = 64
 KEEP_PROB = 0.5
+LOG_DIR = 'log/'
 
 
 with tf.variable_scope('input'):
 	x = tf.placeholder(dtype=tf.float32, shape=[None,INPUT_SIZE], name='data')
-	x_image = tf.transpose(tf.reshape(x, [-1,IMAGE_CHANNEL,IMAGE_WIDTH,IMAGE_HETGHT]), [0,3,2,1], name='image')
+	x_image = tf.reshape(x, [-1,IMAGE_WIDTH,IMAGE_HETGHT,IMAGE_CHANNEL], name='image')
+	tf.summary.image('summary_image', x_image, 4)
 	y_ = tf.placeholder(dtype=tf.float32, shape=[None,CLASS_NUM], name='label')
 	keep_prob = tf.placeholder(dtype=tf.float32, name='keep_prob')
 
@@ -72,6 +80,7 @@ with tf.variable_scope('output'):
 
 with tf.variable_scope('loss'):
 	cross_entropy = -tf.reduce_mean(y_*tf.log(tf.clip_by_value(y,1e-9,1)), name='loss')
+	tf.summary.scalar('summary_loss', cross_entropy)
 
 
 with tf.variable_scope('train'):
@@ -81,9 +90,10 @@ with tf.variable_scope('train'):
 with tf.variable_scope('accuracy'):
 	correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
 	accuracy = tf.reduce_mean(tf.cast(correct_prediction,tf.float32), name='accuracy')
+	tf.summary.scalar('summary_accuracy', accuracy)
 
-
-writer = tf.summary.FileWriter('log/', tf.get_default_graph())
+merged = tf.summary.merge_all()
+writer = tf.summary.FileWriter(LOG_DIR, tf.get_default_graph())
 #writer.close()
 
 
@@ -97,9 +107,10 @@ with tf.Session() as sess:
 		if i % 10 == 0:
 			run_option = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
 			run_metadata = tf.RunMetadata()
-			sess.run(train_step, feed_dict={x:batch_xs,y_:batch_ys,keep_prob:KEEP_PROB},
+			summary, _ = sess.run([merged, train_step], feed_dict={x:batch_xs,y_:batch_ys,keep_prob:KEEP_PROB},
 				options=run_option, run_metadata=run_metadata)
 			writer.add_run_metadata(run_metadata, 'step%d' % i)
+			writer.add_summary(summary, i)
 		else:
 			sess.run(train_step, feed_dict={x:batch_xs,y_:batch_ys,keep_prob:KEEP_PROB})
 		if i % 100 == 0:

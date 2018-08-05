@@ -100,14 +100,4 @@ def read_data_sets(train_dir):
   data_sets.train = DataSet(np.array(train_datas).reshape(50000,3072), np.array(train_labels))
   data_sets.test = DataSet(np.array(test_datas).reshape(10000,3072), np.array(test_labels))
 
-  '''
-  CSV_COLUMN_NAMES = ['SepalLength','SepalWidth','PetalLength', 'PetalWidth', 'Species']
-  train = pd.read_csv(local_file,names=CSV_COLUMN_NAMES,header=0)
-  local_file = maybe_download(TEST, train_dir)
-  test = pd.read_csv(local_file,names=CSV_COLUMN_NAMES,header=0)
-  train_datas, train_labels = train.iloc[:,:-1].values, train.iloc[:,-1:].values
-  test_datas, test_labels = test.iloc[:,:-1], test.iloc[:,-1:]
-  train_labels, test_labels = OneHotEncoder().fit_transform(train_labels).toarray(), OneHotEncoder().fit_transform(test_labels).toarray()
-  '''
-
   return data_sets
