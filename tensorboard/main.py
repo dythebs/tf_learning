@@ -5,6 +5,7 @@ import numpy as np
 
 def weight_variable(shape):
 	W = tf.get_variable(shape=shape, initializer=tf.truncated_normal_initializer(stddev=0.1), name='weight')
+	#将张量加入统计
 	tf.summary.histogram('summary_weight', W)
 	return W
 
@@ -59,6 +60,7 @@ LOG_DIR = 'log/'
 with tf.variable_scope('input'):
 	x = tf.placeholder(dtype=tf.float32, shape=[None,INPUT_SIZE], name='data')
 	x_image = tf.reshape(x, [-1,IMAGE_WIDTH,IMAGE_HETGHT,IMAGE_CHANNEL], name='image')
+	#将图像加入统计
 	tf.summary.image('summary_image', x_image, 4)
 	y_ = tf.placeholder(dtype=tf.float32, shape=[None,CLASS_NUM], name='label')
 	keep_prob = tf.placeholder(dtype=tf.float32, name='keep_prob')
@@ -80,6 +82,7 @@ with tf.variable_scope('output'):
 
 with tf.variable_scope('loss'):
 	cross_entropy = -tf.reduce_mean(y_*tf.log(tf.clip_by_value(y,1e-9,1)), name='loss')
+	#将标量加入统计
 	tf.summary.scalar('summary_loss', cross_entropy)
 
 
@@ -92,9 +95,11 @@ with tf.variable_scope('accuracy'):
 	accuracy = tf.reduce_mean(tf.cast(correct_prediction,tf.float32), name='accuracy')
 	tf.summary.scalar('summary_accuracy', accuracy)
 
+
+#合并所有的统计
 merged = tf.summary.merge_all()
+#写入计算图
 writer = tf.summary.FileWriter(LOG_DIR, tf.get_default_graph())
-#writer.close()
 
 
 mnist = input_data.read_data_sets('MNIST_data/', one_hot=True)
@@ -105,11 +110,13 @@ with tf.Session() as sess:
 	for i in range(1000):
 		batch_xs,batch_ys = mnist.train.next_batch(BATCH_SIZE)
 		if i % 10 == 0:
+			#统计运行的时间和内存
 			run_option = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
 			run_metadata = tf.RunMetadata()
 			summary, _ = sess.run([merged, train_step], feed_dict={x:batch_xs,y_:batch_ys,keep_prob:KEEP_PROB},
 				options=run_option, run_metadata=run_metadata)
 			writer.add_run_metadata(run_metadata, 'step%d' % i)
+			#将merged的统计加入log
 			writer.add_summary(summary, i)
 		else:
 			sess.run(train_step, feed_dict={x:batch_xs,y_:batch_ys,keep_prob:KEEP_PROB})
