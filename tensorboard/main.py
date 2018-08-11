@@ -1,6 +1,8 @@
 import input_data
 import tensorflow as tf 
 import numpy as np
+from tensorflow.contrib.tensorboard.plugins import projector
+import os
 
 
 def weight_variable(shape):
@@ -55,11 +57,13 @@ LEARNING_RATE = 1e-3
 BATCH_SIZE = 64
 KEEP_PROB = 0.5
 LOG_DIR = 'log/'
+SPRITE_FILE = 'mnist_sprite.jpg'
+META_FILE = 'mnist_meta.tsv'
 
 
 with tf.variable_scope('input'):
 	x = tf.placeholder(dtype=tf.float32, shape=[None,INPUT_SIZE], name='data')
-	x_image = tf.reshape(x, [-1,IMAGE_WIDTH,IMAGE_HETGHT,IMAGE_CHANNEL], name='image')
+	x_image = tf.reshape(x, [-1,IMAGE_HETGHT,IMAGE_WIDTH,IMAGE_CHANNEL], name='image')
 	#将图像加入统计
 	tf.summary.image('summary_image', x_image, 4)
 	y_ = tf.placeholder(dtype=tf.float32, shape=[None,CLASS_NUM], name='label')
@@ -121,9 +125,29 @@ with tf.Session() as sess:
 		else:
 			sess.run(train_step, feed_dict={x:batch_xs,y_:batch_ys,keep_prob:KEEP_PROB})
 		if i % 100 == 0:
-			train_accuracy = sess.run(accuracy, feed_dict={x:batch_xs,y_:batch_ys,keep_prob:1.0},
-				options=run_option, run_metadata=run_metadata)
-			print("step %d, training accuracy %g" % (i,train_accuracy))
+			train_accuracy = sess.run(accuracy, feed_dict={x:batch_xs,y_:batch_ys,keep_prob:1.0})
+			print("step %d, training accuracy %g" % (i, train_accuracy))
+
+	final_result = sess.run(y, feed_dict={x:mnist.test.images,keep_prob:1.0})
 
 
-	print(sess.run(accuracy,feed_dict={x:mnist.test.images,y_:mnist.test.labels,keep_prob:1.0}))
+#可视化结果
+#使用结果创建Tensor
+y = tf.Variable(final_result, name='final_result')
+writer = tf.summary.FileWriter(LOG_DIR)
+
+config = projector.ProjectorConfig()
+embedding = config.embeddings.add()
+
+embedding.tensor_name = y.name
+embedding.metadata_path = META_FILE
+embedding.sprite.image_path = SPRITE_FILE
+embedding.sprite.single_image_dim.extend([28,28])
+
+projector.visualize_embeddings(writer, config)
+writer.close()
+
+sess = tf.InteractiveSession()
+sess.run(tf.global_variables_initializer())
+Saver = tf.train.Saver()
+Saver.save(sess, os.path.join(LOG_DIR, 'model'))
