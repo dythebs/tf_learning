@@ -32,8 +32,8 @@ with tf.Session() as sess:
 	sess.run(tf.global_variables_initializer())
 	init_fn(sess)
 
-	for i in range(20000):
-		batch_xs, batch_ys = flower_photos.train.next_batch(100)
+	for i in range(3000):
+		batch_xs, batch_ys = flower_photos.train.next_batch(128)
 		sess.run(train_step, feed_dict={x:batch_xs,y_:batch_ys,keep_prob:0.8})
 		if i % 100 == 0:
 			test_batch_xs, test_batch_ys = flower_photos.test.next_batch(200)
