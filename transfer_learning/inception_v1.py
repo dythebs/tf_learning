@@ -1,7 +1,7 @@
 import tensorflow.contrib.slim as slim
 import tensorflow as tf 
 
-def inception_v1(inputs, num_classes):
+def inception_v1(inputs, keep_prob, num_classes):
 	with tf.variable_scope('InceptionV1'):
 		with slim.arg_scope([slim.conv2d, slim.fully_connected],
 			weights_initializer=tf.truncated_normal_initializer(stddev=0.001)):
@@ -150,7 +150,7 @@ def inception_v1(inputs, num_classes):
 
 						with tf.variable_scope('Logits'):
 							net = slim.avg_pool2d(net, [7, 7], stride=1, scope='AvgPool_0a_7x7')
-							net = slim.dropout(net, 0.8, scope='Dropout_0b')
+							net = slim.dropout(net, keep_prob, scope='Dropout_0b')
 							logits = slim.conv2d(net, num_classes, [1, 1], activation_fn=None,
 								normalizer_fn=None, scope='Conv2d_0c_1x1')
 

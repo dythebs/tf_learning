@@ -5,7 +5,8 @@ import tensorflow as tf
 
 
 x = tf.placeholder(dtype=tf.float32, shape=[None, 224, 224, 3])
-logits = inception_v1.inception_v1(x, 5)
+keep_prob = tf.placeholder(dtype=tf.float32)
+logits = inception_v1.inception_v1(x, keep_prob, 5)
 logits = tf.reshape(logits, [-1, 5])
 
 exclusions = ['InceptionV1/Logits']
@@ -33,11 +34,11 @@ with tf.Session() as sess:
 
 	for i in range(20000):
 		batch_xs, batch_ys = flower_photos.train.next_batch(100)
-		sess.run(train_step, feed_dict={x:batch_xs,y_:batch_ys})
+		sess.run(train_step, feed_dict={x:batch_xs,y_:batch_ys,keep_prob:0.8})
 		if i % 100 == 0:
 			test_batch_xs, test_batch_ys = flower_photos.test.next_batch(200)
-			test_accuracy, loss = sess.run([accuracy, cross_entropy] ,feed_dict={x:test_batch_xs,y_:test_batch_ys})
+			test_accuracy, loss = sess.run([accuracy, cross_entropy] ,feed_dict={x:test_batch_xs,y_:test_batch_ys,keep_prob:1})
 			print("step %d, test accuracy %g, loss %g" % (i, test_accuracy, loss))
 
 	#计算精度
-	print(sess.run(accuracy,feed_dict={x:flower_photos.test.images,y_:flower_photos.test.labels}))
+	print(sess.run(accuracy,feed_dict={x:flower_photos.test.images,y_:flower_photos.test.labels,keep_prob:1}))
