@@ -9,3 +9,4 @@ take notes while learning tensorflow
 * `./mnist_softmax_regression` [handwriting recognition by softmax regression](http://www.tensorfly.cn/tfdoc/tutorials/mnist_beginners.html)
 * `./tensorboard`
 * `./transfer_learning`
+* `./util`
