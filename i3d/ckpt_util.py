@@ -29,8 +29,11 @@ def restore(sess):
 		if not name.startswith('global_step') and not name.startswith('InceptionV1/Logits'):
 			name_3d = 'InceptionV1_3d' + key[11:]
 			for v in variables:
-				if v.name.startswith(name_3d):
-					return v
+				if v.name.startswith('rgb/'+name_3d):
+					rgb_tensor_3d = v
+				if v.name.startswith('flow/'+name_3d):
+					flow_tensor_3d = v
+			return rgb_tensor_3d, flow_tensor_3d
 		else:
 			return None
 	
@@ -41,14 +44,16 @@ def restore(sess):
 
 	#遍历文件中所有变量
 	for key in var_to_shape_map:
-		tensor_3d = get_3d_tensor(key)
-		if tensor_3d == None:
+		rgb_tensor_3d, flow_tensor_3d = get_3d_tensor(key)
+		if rgb_tensor_3d is None or flow_tensor_3d is None:
 			continue
 		if 'weight' in key:
 			weight = reader.get_tensor(key)
 			dims = weight.shape[0]
 			weight_3d = np.repeat(weight[np.newaxis, :], dims, axis=0) / dims
-			sess.run(tf.assign(get_3d_tensor(key), weight_3d))
+			sess.run(tf.assign(rgb_tensor_3d, weight_3d))
+			#sess.run(tf.assign(flow_tensor_3d, weight_3d))
 		else:
 			value = reader.get_tensor(key)
-			sess.run(tf.assign(get_3d_tensor(key), value))
+			sess.run(tf.assign(rgb_tensor_3d, value))
+			#sess.run(tf.assign(flow_tensor_3d, value))
