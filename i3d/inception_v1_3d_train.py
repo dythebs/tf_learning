@@ -41,13 +41,13 @@ for i in range(3000):
 	element = sess.run(one_element)
 	rgb_datas = element[0]
 	flow_datas = element[1]
-	labels = input_data.one_hot([b.decode() for b in element[2].tolist()])
+	labels = input_data.one_hot([b.decode() for b in element[-1].tolist()])
 	sess.run(train_step, feed_dict={rgb_input:rgb_datas, flow_input:flow_datas, y_:labels, keep_prob:0.6})
 	if i % 50 == 0:
 		element = sess.run(one_element)
 		rgb_datas = element[0]
 		flow_datas = element[1]
-		labels = input_data.one_hot([b.decode() for b in element[1].tolist()])
+		labels = input_data.one_hot([b.decode() for b in element[-1].tolist()])
 		train_accuracy, loss = sess.run([accuracy, cross_entropy] ,
 			feed_dict={rgb_input:rgb_datas, flow_input:flow_datas, y_:labels, keep_prob:1})
 		print("step %d, train accuracy %g, loss %g" % (i, train_accuracy, loss))

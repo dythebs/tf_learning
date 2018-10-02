@@ -53,7 +53,7 @@ def read_data(sess, batch_size=6, epeoch=10):
 	dataset = tf.data.Dataset.from_tensor_slices((rgb_filenames, flow_filenames, labels))
 	dataset = dataset.map(lambda rgb_filename, flow_filename, label:tuple(tf.py_func(
 		paser, [rgb_filename, flow_filename, label], [tf.uint8, tf.float32, tf.string])))
-	dataset = dataset.shuffle(1).batch(batch_size).repeat()
+	dataset = dataset.shuffle(500).batch(batch_size).repeat()
 	iterator = dataset.make_initializable_iterator()
 	one_element = iterator.get_next()
 	sess.run(iterator.initializer, feed_dict={rgb_filenames_ph:rgb_filenames, flow_filenames_ph:flow_filenames, labels_ph:labels})
