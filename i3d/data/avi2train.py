@@ -30,7 +30,7 @@ def task(train_videos):
 		if frames < 65:#多出一帧计算光流使用
 			rgb_array = np.repeat(rgb_array, (65//frames+1), axis=0)
 		frames = rgb_array.shape[0]
-		start = random.randint(0,frames-63)
+		start = random.randint(0,frames-64)
 		np.save(os.path.join(rgb_np_train_path, base_name+'_rgb'), rgb_array[start:start+64])#只保存64帧
 		#flow
 		flow_array = []
