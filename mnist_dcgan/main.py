@@ -10,6 +10,7 @@ BETA1 = 0.4
 NOISE_SIZE = 100
 tf.reset_default_graph()
 
+
 def generator(z):
 	with slim.arg_scope([slim.fully_connected], 
 		normalizer_fn=slim.batch_norm, 
@@ -45,6 +46,7 @@ def discriminator(x):
 			net = slim.fully_connected(net, 1, activation_fn=None)
 			return tf.nn.sigmoid(net), net
 
+
 def get_input_tensor():
 	mnist = input_data.read_data_sets("MNIST_data/")
 
@@ -58,7 +60,8 @@ def get_input_tensor():
 
 	return one_element
 
-z = tf.placeholder(dtype=tf.float32, shape=[None, NOISE_SIZE])
+
+z = tf.random_uniform([BATCH_SIZE, 100], -1, 1, dtype=tf.float32)
 x = get_input_tensor()
 with tf.variable_scope('generator'):
 	g_out = generator(z)
@@ -84,15 +87,11 @@ d_optim = tf.train.AdamOptimizer(LEARNING_RATE, beta1=BETA1).minimize(d_loss, va
 with tf.Session() as sess:
 	sess.run(tf.global_variables_initializer())
 	for i in range(200000):
-		z_input = np.random.uniform(-1, 1, [BATCH_SIZE, NOISE_SIZE]).astype(np.float32)
-		sess.run(g_optim, feed_dict={z:z_input})
-		z_input = np.random.uniform(-1, 1, [BATCH_SIZE, NOISE_SIZE]).astype(np.float32)
-		sess.run(d_optim, feed_dict={z:z_input})
-		z_input = np.random.uniform(-1, 1, [BATCH_SIZE, NOISE_SIZE]).astype(np.float32)
-		sess.run(g_optim, feed_dict={z:z_input})
+		sess.run(g_optim)
+		sess.run(d_optim)
+		sess.run(g_optim)
 		if i % 100 == 0:
-			z_input = np.random.uniform(-1, 1, [BATCH_SIZE, NOISE_SIZE]).astype(np.float32)
-			image, gl, drl, dfl = sess.run([g_out, g_loss, d_real_loss, d_fake_loss], feed_dict={z:z_input})
+			image, gl, drl, dfl = sess.run([g_out, g_loss, d_real_loss, d_fake_loss])
 			print("step %d, g_loss %g, dr_loss %g, df_loss %g" % (i, gl, drl, dfl))
 			image = (image+1)*127.5
 			full_images = np.zeros([28*8, 28*8])
