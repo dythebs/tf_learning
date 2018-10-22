@@ -3,6 +3,7 @@ take notes while learning tensorflow
 
 # Structure of the repository
 * `./cifar-10_vgg16`
+* `./ckpt2pb`
 * `./fashion-mnist_cnn`
 * `./iris_softmax_regression`
 * `./lstm`
